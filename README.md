@@ -3,7 +3,7 @@ rpcapd is a daemon that provides remote traffic capture for Windows version of [
 
 This is a fork of rpcapd modified to compile and work in Linux.
 
-It is still quite messy and may not compile or work. Also contains a memory leak when client (Wireshark) is requesting available interfaces.
+It is still quite messy and may not compile or work.
 
 ## Building
 This fork ships with a patched libpcap version found in WinPcap library.
@@ -23,9 +23,9 @@ This tool is to be used with Windows clients connecting to the linux box. Launch
 
 Root privileges are needed to capture the interfaces.
 
-There are two ways to connect from a Windows box. One is to use GUI in Wireshark *Capture Options* dialog, but it's not cool and sometimes causes rpcapd child process to segfault during interface discovery.
-
-Other way is to invoke wireshark from commnd line:
+There are two ways to connect from a Windows box: 
+  1. Use GUI in Wireshark *Capture Options* dialog. Tested on Wireshark 1.7.1.
+  2. Invoke wireshark from commnd line specifying capture interface directly:
 
     wireshark -k -i rpcapd://<capture_box_ip>:<rpcapd_port>/<interface_to_capture>
 
