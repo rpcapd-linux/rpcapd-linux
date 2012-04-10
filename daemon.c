@@ -1548,7 +1548,7 @@ void daemon_seraddr(struct sockaddr_storage *sockaddrin, struct sockaddr_storage
 		sockaddr->sin_port= htons(sockaddr->sin_port);
 		memcpy(sockaddrout, sockaddr, sizeof(struct sockaddr_in) );
 	}
-	else
+	else if (sockaddrin->ss_family == AF_INET6)
 	{
 	struct sockaddr_in6 *sockaddr;
 	
