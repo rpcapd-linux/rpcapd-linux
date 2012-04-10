@@ -840,7 +840,7 @@ uint16 nif= 0;								// counts the number of interface listed
 		return -1;
 
 	// We do no longer need the device list. Free it
-	//pcap_freealldevs(alldevs);
+	pcap_freealldevs(alldevs);
 
 	// everything is fine
 	return 0;
