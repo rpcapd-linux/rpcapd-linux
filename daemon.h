@@ -43,7 +43,7 @@ struct daemon_slpars
 };
 
 
-void daemon_serviceloop( void *ptr );
+void daemon_serviceloop( void *ptr, char *data_port );
 
 void pthread_suspend(int msec);
 

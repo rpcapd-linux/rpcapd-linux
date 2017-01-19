@@ -61,7 +61,7 @@ int daemon_findalldevs(SOCKET sockctrl, char *errbuf);
 
 int daemon_opensource(SOCKET sockctrl, char *source, int srclen, uint32 plen, char *errbuf);
 pcap_t *daemon_startcapture(SOCKET sockctrl, pthread_t *threaddata, char *source, int active, 
-							struct rpcap_sampling *samp_param, uint32 plen, char *errbuf);
+							struct rpcap_sampling *samp_param, uint32 plen, char *errbuf, char *data_port);
 int daemon_endcapture(pcap_t *fp, pthread_t *threaddata, char *errbuf);
 
 int daemon_updatefilter(pcap_t *fp, uint32 plen);
@@ -89,12 +89,14 @@ void *daemon_thrdatamain(void *ptr);
 
 	\param ptr: a void pointer that keeps the reference of the 'pthread_chain'
 	value corrisponding to this thread. This variable is casted into a 'pthread_chain'
-	value in order to retrieve the socket we're currently using, the therad ID, and 
+	value in order to retrieve the socket we're currently using, the thread ID, and
 	some pointers to the previous and next elements into this struct.
+
+ 	\param data_port: the server listening port for data transmission in passive mode.
 
 	\return None.
 */
-void daemon_serviceloop( void *ptr )
+void daemon_serviceloop( void *ptr, char *data_port)
 {
 char errbuf[PCAP_ERRBUF_SIZE + 1];		// keeps the error string, prior to be printed
 char source[PCAP_BUF_SIZE];				// keeps the string that contains the interface to open
@@ -294,7 +296,7 @@ auth_again:
 
 			case RPCAP_MSG_STARTCAP_REQ:
 			{
-				fp= daemon_startcapture(pars->sockctrl, &threaddata, source, pars->isactive, &samp_param, ntohl(header.plen), errbuf);
+				fp= daemon_startcapture(pars->sockctrl, &threaddata, source, pars->isactive, &samp_param, ntohl(header.plen), errbuf, data_port);
 
 				if (fp == NULL)
 					SOCK_ASSERT(errbuf, 1);
@@ -939,7 +941,8 @@ error:
 	\param plen: the length of the current message (needed in order to be able
 	to discard excess data in the message, if present)
 */
-pcap_t *daemon_startcapture(SOCKET sockctrl, pthread_t *threaddata, char *source, int active, struct rpcap_sampling *samp_param, uint32 plen, char *errbuf)
+pcap_t *daemon_startcapture(SOCKET sockctrl, pthread_t *threaddata, char *source, int active,
+							struct rpcap_sampling *samp_param, uint32 plen, char *errbuf, char *data_port)
 {
 char portdata[PCAP_BUF_SIZE];		// temp variable needed to derive the data port
 char peerhost[PCAP_BUF_SIZE];		// temp variable needed to derive the host name of our peer
@@ -1035,9 +1038,16 @@ int serveropen_dp;							// keeps who is going to open the data connection
 	{
 		hints.ai_flags = AI_PASSIVE;
 
-		// Let's the server socket pick up a free network port for us
-		if (sock_initaddress(NULL, "0", &hints, &addrinfo, errbuf, PCAP_ERRBUF_SIZE) == -1)
-			goto error;
+		if (data_port)
+		{
+			if (sock_initaddress(NULL, data_port, &hints, &addrinfo, errbuf, PCAP_ERRBUF_SIZE) == -1)
+				goto error;
+		}
+		else
+		{	// Let's the server socket pick up a free network port for us
+			if (sock_initaddress(NULL, "0", &hints, &addrinfo, errbuf, PCAP_ERRBUF_SIZE) == -1)
+				goto error;
+		}
 
 		if ( (sockdata= sock_open(addrinfo, SOCKOPEN_SERVER, 1 /* max 1 connection in queue */, errbuf, PCAP_ERRBUF_SIZE)) == -1)
 			goto error;
