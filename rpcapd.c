@@ -93,7 +93,7 @@ void printusage()
 	"  -b <address>: the address to bind to (either numeric or literal).\n"
     "      Default: it binds to all local IPv4 addresses\n"
 	"  -p <port>: the port to bind to. Default: it binds to port " RPCAP_DEFAULT_NETPORT "\n"
-	"  -d <data port>: the port to transfer data.\n"
+	"  -t <data port>: the port to transfer data.\n"
 	"  -4: use only IPv4 (default both IPv4 and IPv6 waiting sockets are used)\n"
 	"  -l <host_list>: a file that keeps the list of the hosts which are allowed\n"
 	"      to connect to this server (if more than one, list them one per line).\n"
@@ -150,7 +150,7 @@ char errbuf[PCAP_ERRBUF_SIZE + 1];	// keeps the error string, prior to be printe
 	mainhints.ai_socktype = SOCK_STREAM;
 
 	// Getting the proper command line options
-	while ((retval = getopt(argc, argv, "b:dhp:d:4l:na:s:f:v")) != -1)
+	while ((retval = getopt(argc, argv, "b:dhp:t:4l:na:s:f:v")) != -1)
 	{
 		switch (retval)
 		{
@@ -160,7 +160,7 @@ char errbuf[PCAP_ERRBUF_SIZE + 1];	// keeps the error string, prior to be printe
 			case 'p':
 				strncpy(port, optarg, MAX_LINE);
 				break;
-			case 'd':
+			case 't':
 				strncpy(data_port, optarg, MAX_LINE);
 				break;
 			case '4':
