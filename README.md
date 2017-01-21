@@ -16,10 +16,24 @@ Installation under Ubuntu Linux:
     cd ../
     make
 
+Installation under Centos/Fedora/Redhat Linux:
+
+libcrypt.a in glibc-static is broken in ,remove `-static` in Makefile
+
+     yum install -y byacc glibc-static libgcrypt-devel
+     cd rpcapd/libpcap
+     ./configure && make
+     cd ../
+     make
+
 ## Using
 This tool is to be used with Windows clients connecting to the linux box. Launch this tool using
 
     sudo ./rpcapd -4 -n -p <chosen_port>
+
+You can specify a data transfer port rather than a random port by default.
+
+    sudo ./rpcapd -4 -n -t <data_transfer_port> -p <chosen_port>
 
 Root privileges are needed to capture the interfaces.
 

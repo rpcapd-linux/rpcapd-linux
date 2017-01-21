@@ -65,6 +65,7 @@ int passivemode= 1;						//!< '1' if we want to run in passive mode as well
 struct addrinfo mainhints;				//!< temporary struct to keep settings needed to open the new socket
 char address[MAX_LINE + 1];				//!< keeps the network address (either numeric or literal) to bind to
 char port[MAX_LINE + 1];				//!< keeps the network port to bind to
+char data_port[MAX_LINE + 1];				//!< keeps the network port to transfer data
 
 extern char *optarg;	// for getopt()
 
@@ -92,6 +93,7 @@ void printusage()
 	"  -b <address>: the address to bind to (either numeric or literal).\n"
     "      Default: it binds to all local IPv4 addresses\n"
 	"  -p <port>: the port to bind to. Default: it binds to port " RPCAP_DEFAULT_NETPORT "\n"
+	"  -t <data port>: the port to transfer data.\n"
 	"  -4: use only IPv4 (default both IPv4 and IPv6 waiting sockets are used)\n"
 	"  -l <host_list>: a file that keeps the list of the hosts which are allowed\n"
 	"      to connect to this server (if more than one, list them one per line).\n"
@@ -148,7 +150,7 @@ char errbuf[PCAP_ERRBUF_SIZE + 1];	// keeps the error string, prior to be printe
 	mainhints.ai_socktype = SOCK_STREAM;
 
 	// Getting the proper command line options
-	while ((retval = getopt(argc, argv, "b:dhp:4l:na:s:f:v")) != -1)
+	while ((retval = getopt(argc, argv, "b:dhp:t:4l:na:s:f:v")) != -1)
 	{
 		switch (retval)
 		{
@@ -157,6 +159,9 @@ char errbuf[PCAP_ERRBUF_SIZE + 1];	// keeps the error string, prior to be printe
 				break;
 			case 'p':
 				strncpy(port, optarg, MAX_LINE);
+				break;
+			case 't':
+				strncpy(data_port, optarg, MAX_LINE);
 				break;
 			case '4':
 				mainhints.ai_family = PF_INET;		// IPv4 server only
@@ -590,7 +595,7 @@ SOCKET sockmain;
 		/* GV otherwise, the thread handle is not destroyed  */
 		pthread_attr_init(&detachedAttribute); 
 		pthread_attr_setdetachstate(&detachedAttribute, PTHREAD_CREATE_DETACHED);
-		if ( pthread_create( &threadId, &detachedAttribute, (void *) &daemon_serviceloop, (void *) pars) )
+		if ( pthread_create( &threadId, &detachedAttribute, (void *) &daemon_serviceloop, (void *) pars), data_port )
 		{
 			SOCK_ASSERT("Error creating the child thread", 1);
 			pthread_attr_destroy(&detachedAttribute);
@@ -617,7 +622,7 @@ SOCKET sockmain;
 			// Close the main socket (must be open only in the parent)
 			closesocket(sockmain);
 
-			daemon_serviceloop( (void *) pars);
+			daemon_serviceloop( (void *) pars, data_port);
 			exit(0);
 		}
 
@@ -708,7 +713,7 @@ struct daemon_slpars *pars;			// parameters needed by the daemon_serviceloop()
 		pars->isactive= 1;
 		pars->nullAuthAllowed= nullAuthAllowed;
 
-		daemon_serviceloop( (void *) pars);
+		daemon_serviceloop( (void *) pars, data_port);
 
 		activeclose= pars->activeclose;
 
