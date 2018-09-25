@@ -1,5 +1,9 @@
+# Update: libpcap v1.9.0 now has rpcapd
+
+An rpcapd executable is generated in libpcap v1.9.0 and later, when compiled with the `--enable-remote` flag (`./configure --enable-remote && make`). That should be used instead of this fork.
+
 # rpcapd utility for Linux
-rpcapd is a daemon that provides remote traffic capture for Windows version of [Wireshark](http://www.wireshark.org) protocol analyzer. It is shipped with [WinPcap](http://www.winpcap.org/)  network capture library for Windows but is absent from libpcap in Linux.
+rpcapd is a daemon that provides remote traffic capture for Windows version of [Wireshark](http://www.wireshark.org) protocol analyzer. It is shipped with [WinPcap](http://www.winpcap.org/)  network capture library for Windows but is absent from libpcap older than 1.9.0 in Linux.
 
 This is a fork of rpcapd modified to compile and work in Linux.
 
