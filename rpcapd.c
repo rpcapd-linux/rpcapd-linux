@@ -59,7 +59,7 @@
 char hostlist[MAX_HOST_LIST + 1];		//!< Keeps the list of the hosts that are allowed to connect to this server
 struct active_pars activelist[MAX_ACTIVE_LIST];		//!< Keeps the list of the hosts (host, port) on which I want to connect to (active mode)
 int nullAuthAllowed;					//!< '1' if we permit NULL authentication, '0' otherwise
-SOCKET sockmain;						//!< keeps the main socket identifier
+SOCKET sockmaind;						//!< keeps the main socket identifier
 char loadfile[MAX_LINE + 1];			//!< Name of the file from which we have to load the configuration
 int passivemode= 1;						//!< '1' if we want to run in passive mode as well
 struct addrinfo mainhints;				//!< temporary struct to keep settings needed to open the new socket
@@ -377,21 +377,21 @@ int i;
 		{
 		SOCKET *socktemp;
 
-			if ( (sockmain= sock_open(tempaddrinfo, SOCKOPEN_SERVER, SOCKET_MAXCONN, errbuf, PCAP_ERRBUF_SIZE)) == -1)
+			if ( (sockmaind= sock_open(tempaddrinfo, SOCKOPEN_SERVER, SOCKET_MAXCONN, errbuf, PCAP_ERRBUF_SIZE)) == -1)
 			{
 				SOCK_ASSERT(errbuf, 1);
 				tempaddrinfo= tempaddrinfo->ai_next;
 				continue;
 			}
 
-			// This trick is needed in order to allow the child thread to save the 'sockmain' variable
+			// This trick is needed in order to allow the child thread to save the 'sockmaind' variable
 			// withouth getting it overwritten by the sock_open, in case we want to open more than one waiting sockets
 			// For instance, the pthread_create() will accept the socktemp variable, and it will deallocate immediately that variable
 			socktemp= (SOCKET *) malloc (sizeof (SOCKET));
 			if (socktemp == NULL)
 				exit(0);
 
-			*socktemp= sockmain;
+			*socktemp= sockmaind;
 
 #ifdef WIN32
 			/* GV we need this to create the thread as detached. */
@@ -453,10 +453,10 @@ void main_cleanup(int sign)
 	SOCK_ASSERT(PROGRAM_NAME " is closing.\n", 1);
 
 	// FULVIO (bug)
-	// Here we close only the latest 'sockmain' created; if we opened more than one waiting sockets, 
+	// Here we close only the latest 'sockmaind' created; if we opened more than one waiting sockets, 
 	// only the latest one is closed correctly.
-	if (sockmain)
-		closesocket(sockmain);
+	if (sockmaind)
+		closesocket(sockmaind);
 	sock_cleanup();
 
 	/*
@@ -511,7 +511,7 @@ int stat;
 	- if we're in daemon mode, the main program must terminate and a new child must be 
 	created in order to create the daemon
 
-	\param ptr: it keeps the main socket handler (what's called 'sockmain' in the main() ), that
+	\param ptr: it keeps the main socket handler (what's called 'sockmaind' in the main() ), that
 	represents the socket used in the main connection. It is a 'void *' just because pthreads
 	want this format.
 */
@@ -521,13 +521,13 @@ char errbuf[PCAP_ERRBUF_SIZE + 1];	// keeps the error string, prior to be printe
 SOCKET sockctrl;				// keeps the socket ID for this control connection
 struct sockaddr_storage from;	// generic sockaddr_storage variable
 socklen_t fromlen;				// keeps the length of the sockaddr_storage variable
-SOCKET sockmain;
+SOCKET sockmaind;
 
 #ifndef WIN32
 	pid_t pid;
 #endif
 
-	sockmain= *((SOCKET *) ptr);
+	sockmaind= *((SOCKET *) ptr);
 
 	// Delete the pointer (which has been allocated in the main)
 	free(ptr);
@@ -547,7 +547,7 @@ SOCKET sockmain;
 		// Connection creation
 		fromlen = sizeof(struct sockaddr_storage);
 
-		sockctrl= accept(sockmain, (struct sockaddr *) &from, &fromlen);
+		sockctrl= accept(sockmaind, (struct sockaddr *) &from, &fromlen);
 		
 		if (sockctrl == -1)
 		{
@@ -620,7 +620,7 @@ SOCKET sockmain;
 			pars->nullAuthAllowed= nullAuthAllowed;
 
 			// Close the main socket (must be open only in the parent)
-			closesocket(sockmain);
+			closesocket(sockmaind);
 
 			daemon_serviceloop( (void *) pars, data_port);
 			exit(0);
